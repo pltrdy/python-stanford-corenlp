@@ -110,7 +110,7 @@ class RobustService(object):
                 pass
 
             if time.time() - start_time < self.TIMEOUT:
-                time.sleep(1)
+                time.sleep(5)
             else:
                 raise PermanentlyFailedException("Timed out waiting for service to come alive.")
 
@@ -127,17 +127,17 @@ class CoreNLPClient(RobustService):
 
     def __init__(self, start_server=True, 
                  endpoint="http://localhost:9000", 
-                 timeout=5000, 
-                 threads=5,
+                 timeout=15000, 
+                 threads=8,
                  annotators=None, 
                  properties=None,
                  output_format=None,
                  stdout=sys.stdout,
                  stderr=sys.stderr,
-                 memory="4G",
+                 memory="8G",
+                 heapsize="8G",
                  be_quiet=True,
                 ):
-
         if start_server:
             host, port = urlparse(endpoint).netloc.split(":")
             assert host == "localhost", "If starting a server, endpoint must be localhost"
@@ -145,10 +145,11 @@ class CoreNLPClient(RobustService):
             assert os.getenv("CORENLP_HOME") is not None, "Please define " + \
                 "$CORENLP_HOME where your CoreNLP Java checkout is"
             assert os.getenv("CORENLP_HOME") is not None, "Please define $CORENLP_HOME where your CoreNLP Java checkout is"
-            start_cmd = "java -Xmx{memory} -cp '{corenlp_home}/*'  edu.stanford.nlp.pipeline.StanfordCoreNLPServer -port {port} -timeout {timeout} -threads {threads}".format(
+            start_cmd = "java -Xmx{memory} -mx{heap} -cp '{corenlp_home}/*'  edu.stanford.nlp.pipeline.StanfordCoreNLPServer -port {port} -timeout {timeout} -threads {threads} -props StanfordCoreNLP-french.properties".format(
                 corenlp_home=os.getenv("CORENLP_HOME"),
                 port=port,
                 memory=memory,
+                heap=heapsize.lower(),
                 timeout=timeout,
                 threads=threads)
             stop_cmd = None
